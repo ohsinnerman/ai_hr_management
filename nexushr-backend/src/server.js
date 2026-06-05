@@ -46,7 +46,11 @@ app.use(cookieParser());
 app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 
 // ── Rate limiting (tiered; specific overrides before the catch-all) ──
-app.use('/api/v1/auth', authLimiter); // 10/min
+// Strict limiter ONLY on credential endpoints (brute-force protection). /auth/me and
+// /auth/refresh are routine per-page calls, so they fall under the normal apiLimiter.
+app.use('/api/v1/auth/login', authLimiter); // 10/min
+app.use('/api/v1/auth/forgot-password', authLimiter); // 10/min
+app.use('/api/v1/auth/reset-password', authLimiter); // 10/min
 app.use('/api/v1/ai/chat', aiLimiter); // 20/min
 app.use('/api/v1', apiLimiter); // 100/min
 

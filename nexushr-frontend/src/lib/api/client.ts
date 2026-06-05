@@ -49,7 +49,13 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    // Don't attempt a token refresh for the auth endpoints themselves (login/refresh/me/
+    // logout). A 401 there means "not logged in" — retrying just doubles the failed calls
+    // and, for /me on a logged-out page load, can spiral.
+    const url = originalRequest?.url ?? '';
+    const isAuthEndpoint = /\/auth\/(login|refresh|logout|me)/.test(url);
+
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -79,7 +85,10 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         logoutFn();
-        if (typeof window !== 'undefined') window.location.href = '/login';
+        // Only redirect if we're not already on an auth page (avoids reload churn).
+        if (typeof window !== 'undefined' && !/^\/(login|forgot-password|reset-password)/.test(window.location.pathname)) {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

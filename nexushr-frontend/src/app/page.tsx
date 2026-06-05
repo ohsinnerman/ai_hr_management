@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { type UserRole } from '@/types';
 import { Loader2 } from 'lucide-react';
@@ -15,25 +14,33 @@ const ROLE_REDIRECTS: Record<UserRole, string> = {
 };
 
 export default function HomePage() {
-  const router = useRouter();
-  const { user, fetchMe } = useAuthStore();
+  // Run the session check exactly once on mount. Reading the store via getState()
+  // (not via hook deps) prevents a re-render loop when fetchMe sets user: null.
+  const ran = useRef(false);
 
   useEffect(() => {
-    const redirectUser = async () => {
-      if (!user) {
-        try {
-          await fetchMe();
-          const currentUser = useAuthStore.getState().user;
-          router.replace(currentUser ? ROLE_REDIRECTS[currentUser.role] || '/login' : '/login');
-        } catch {
-          router.replace('/login');
-        }
-      } else {
-        router.replace(ROLE_REDIRECTS[user.role] || '/login');
-      }
+    if (ran.current) return;
+    ran.current = true;
+
+    // Hard navigation (window.location) instead of router.replace: it always lands,
+    // regardless of RSC soft-nav / middleware state — avoids the "stuck loading" hang.
+    const go = (path: string) => {
+      window.location.replace(path);
     };
+
+    const redirectUser = async () => {
+      const { user, fetchMe } = useAuthStore.getState();
+      if (user) {
+        go(ROLE_REDIRECTS[user.role] || '/login');
+        return;
+      }
+      await fetchMe(); // swallows its own errors, sets user or null
+      const current = useAuthStore.getState().user;
+      go(current ? ROLE_REDIRECTS[current.role] || '/login' : '/login');
+    };
+
     redirectUser();
-  }, [user, fetchMe, router]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

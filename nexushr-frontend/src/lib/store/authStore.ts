@@ -55,7 +55,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // /auth/me returns the user (with `employee`) as `data`.
       set({ user: data.data });
     } catch {
-      set({ user: null, accessToken: null });
+      // A hard navigation (e.g. right after login) wipes the in-memory accessToken, so
+      // /auth/me 401s. The 401 interceptor intentionally skips a refresh for /auth/* to
+      // avoid the logged-out loop, so we do ONE explicit cookie-based refresh here and
+      // retry /me. This is what makes a post-login hard redirect land on the dashboard.
+      try {
+        const { data: refresh } = await api.post('/auth/refresh', {});
+        const newToken = refresh?.data?.accessToken;
+        if (!newToken) throw new Error('no token');
+        set({ accessToken: newToken });
+        const { data } = await api.get('/auth/me');
+        set({ user: data.data });
+      } catch {
+        set({ user: null, accessToken: null });
+      }
     }
   },
 

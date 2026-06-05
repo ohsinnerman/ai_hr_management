@@ -48,6 +48,7 @@ export const statusColors = {
   pending: 'badge-warning',
   approved: 'badge-success',
   rejected: 'badge-error',
+  cancelled: 'badge-neutral',
   draft: 'badge-neutral',
   processed: 'badge-info',
   paid: 'badge-success',

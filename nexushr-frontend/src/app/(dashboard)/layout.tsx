@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -9,17 +8,24 @@ import { Header } from '@/components/layout/Header';
 import { ChatBotFloating } from '@/components/ai/ChatBotFloating';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const { user, fetchMe, accessToken } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  // Attempt session restore exactly once on mount (guarded so fetchMe's user:null
+  // result can't retrigger the effect into a loop).
+  const ran = useRef(false);
 
   useEffect(() => {
-    if (!user && !accessToken) {
-      // Restore session from the refresh cookie; bounce to login if it fails.
+    if (ran.current) return;
+    ran.current = true;
+
+    const { user: u, accessToken, fetchMe } = useAuthStore.getState();
+    if (u) return; // already authenticated
+    if (!accessToken) {
       fetchMe().then(() => {
-        if (!useAuthStore.getState().user) router.replace('/login');
+        // Hard redirect so we reliably leave the loading state when there's no session.
+        if (!useAuthStore.getState().user) window.location.replace('/login');
       });
     }
-  }, [user, accessToken, fetchMe, router]);
+  }, []);
 
   if (!user) {
     return (

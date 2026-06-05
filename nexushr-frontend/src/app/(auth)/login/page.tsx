@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -39,7 +39,6 @@ const DEMO_ACCOUNTS = [
 
 function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect');
   const { login } = useAuthStore();
@@ -59,7 +58,9 @@ function LoginForm() {
       const user = await login(formData.email, formData.password);
       toast.success('Welcome back! Redirecting to your dashboard...');
       const destination = redirectTo || ROLE_REDIRECTS[user.role as UserRole] || '/';
-      router.replace(destination);
+      // Hard navigation so the middleware re-evaluates with the fresh refreshToken cookie
+      // and we reliably land on the dashboard (avoids RSC soft-nav edge cases).
+      window.location.assign(destination);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: { code?: string; message?: string } } } };
       const code = err?.response?.data?.error?.code;
