@@ -1,141 +1,166 @@
-# NexusHR — AI-Powered Human Resource Management System
+# NexusHR — AI-Powered HR Management System
 
-> **FWC IT Services Pvt. Ltd.** | Hackathon Build | June 2025  
-> Theme: *"Build the Future of HR Management with AI-Powered Solutions"*  
-> Stack: **MERN** — MongoDB · Express.js · React (Next.js) · Node.js
+**NexusHR** is a modern, AI-powered Human Resource Management System (MVP) developed for the FWC IT Services hackathon. It streamlines core HR processes, including employee management, attendance, leave, payroll processing, and AI-driven candidate screening.
 
----
-
-## 🚀 Overview
-
-**NexusHR** is an enterprise-grade, AI-first Human Resource Management System (HRMS) built on the **MERN stack**, designed for organizations with up to **5,000 employees**. It combines full-spectrum HR operations with Anthropic Claude-powered AI to automate screening, enable conversational HR support, and surface predictive workforce insights.
+This project is built using a modern **MERN Stack** (MongoDB, Express.js, React/Next.js, Node.js 20) with a robust background task queue system and advanced AI integrations.
 
 ---
 
-## 📁 Documentation Index
+## 🌟 Key Features & Phase Status
 
-| # | File | Description |
-|---|------|-------------|
-| 1 | [`docs/PRD.md`](docs/PRD.md) | Product Requirements Document — features, NFRs, KPIs |
-| 2 | [`docs/BRD.md`](docs/BRD.md) | Business Requirements Document — objectives, rules, compliance |
-| 3 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Technical Architecture — MERN system design, stack, security |
-| 4 | [`docs/DATABASE.md`](docs/DATABASE.md) | MongoDB Schema Design — collections, Mongoose models, indexes |
-| 5 | [`docs/API.md`](docs/API.md) | API Design Document — all Express endpoints, contracts, examples |
-| 6 | [`docs/AI_ARCHITECTURE.md`](docs/AI_ARCHITECTURE.md) | AI Architecture — Claude integration, RAG, voice, analytics |
-| 7 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | Deployment & Roadmap — Docker, MongoDB Atlas, 8-phase plan |
-| 8 | [`docs/MASTER_PROMPT.md`](docs/MASTER_PROMPT.md) | Master Implementation Prompt — complete MERN agent build guide |
+NexusHR is developed in phases. The following modules are currently operational:
+
+- **Auth & Security (Phase 1):** Robust JWT-based authentication with refresh tokens (stored in Redis), password hashing, role-based access control, and account lockout protection.
+- **Core HR (Phase 2):** Comprehensive company, department, designation, and employee management. Includes full organizational tree visualization and strict PII encryption (AES-256-GCM) for sensitive data like banking and tax details.
+- **Attendance & Leave Management (Phase 3):** Automated check-in/out tracking with lateness calculation based on company policy. Leave request system with multi-tier approval tracking and balance validation (enforcing BR-001: managers cannot approve their own leaves).
+- **Automated Payroll (Phase 4):** BullMQ-powered background worker for processing complex salary structures (Basic, HRA, DA, PF, ESI, TDS) calculated pro-rata against attendance data. Automated dynamic PDF payslip generation and secure upload to S3/R2.
+- **AI Recruitment Screening (Phase 5):** Background AI worker using Google Gemini (`gemini-2.0-flash`) to parse uploaded PDF/DOCX resumes and automatically score candidates against job requirements, assessing skills, experience, and cultural fit.
 
 ---
 
-## ⚡ Quick Start
+## 🛠️ Technology Stack
+
+### Backend (`nexushr-backend`)
+- **Core Environment:** Node.js 20, Express 4, Mongoose (MongoDB)
+- **Caching & Queues:** ioredis, BullMQ (for Payroll and AI background workers)
+- **Authentication:** jsonwebtoken, bcryptjs
+- **Security:** helmet, cors, cookie-parser, express-validator
+- **Storage:** @aws-sdk/client-s3 (Compatible with AWS S3, Cloudflare R2, and MinIO)
+- **Document Processing:** multer (upload handling), pdfkit (payslip generation), pdf-parse v2 (resume PDF extraction), mammoth (DOCX extraction)
+- **AI Integration:** @google/generative-ai (Gemini 2.0 Flash)
+
+### Frontend (`nexushr-frontend`)
+- **Core Environment:** Next.js 14, TypeScript, Tailwind CSS
+- **State & Data Fetching:** Zustand, @tanstack/react-query, axios
+- **UI Components:** lucide-react, react-hot-toast
+
+---
+
+## 📁 Repository Structure
+
+The project is structured as a monorepo with separate deployment targets for the backend API and frontend application.
+
+```text
+ai_hr_management/
+├── nexushr-backend/      # Node 20 + Express 4 (ESM) REST API
+│   ├── src/
+│   │   ├── config/       # MongoDB, Redis, S3, and Multer configs
+│   │   ├── middleware/   # Authentication, RBAC, and Validation
+│   │   ├── models/       # Mongoose Schemas (15+ models)
+│   │   ├── modules/      # Domain-driven features (Auth, HR, Payroll, Recruitment, AI)
+│   │   ├── queues/       # BullMQ queue initializers
+│   │   ├── utils/        # Crypto, S3 uploaders, PDF generators, Resume parsers
+│   │   ├── workers/      # BullMQ background workers
+│   │   └── server.js     # Main application entry point
+├── nexushr-frontend/     # Next.js 14 Frontend Application
+├── docs/                 # Extensive project documentation (PRD, BRD, DB Schemas, API Specs)
+└── context.md            # Living source of truth for repository state
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites (Infrastructure via Docker)
+NexusHR relies on MongoDB, Redis, and an S3-compatible storage system. You can easily spin these up using Docker for local development.
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/fwcit/nexushr.git
-cd nexushr
+# Start MongoDB & Redis
+docker run -d --name nexushr-mongo -p 27017:27017 mongo:7
+docker run -d --name nexushr-redis -p 6379:6379 redis:7-alpine
 
-# 2. Start infrastructure (MongoDB + Redis)
-docker-compose up -d
+# Start MinIO (Optional, for local S3 storage for Resumes & Payslips)
+docker run -d --name nexushr-minio -p 9000:9000 \
+  -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+  minio/minio server /data
+```
 
-# 3. Backend setup
+*(After the first run, simply use `docker start nexushr-mongo nexushr-redis nexushr-minio`)*
+
+### 2. Environment Variables
+Create an `.env` file in the `nexushr-backend` directory.
+
+```env
+# Server
+NODE_ENV=development
+PORT=5000
+FRONTEND_URL=http://localhost:3000
+CORS_ORIGIN=http://localhost:3000
+
+# Databases
+MONGODB_URI=mongodb://127.0.0.1:27017/nexushr
+REDIS_URL=redis://127.0.0.1:6379
+
+# Security (DO NOT CHANGE ENCRYPTION_KEY AFTER DATA IS SAVED)
+JWT_SECRET=your_jwt_secret_key
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_key
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+ENCRYPTION_KEY=32_character_hex_string_for_aes_256
+
+# Storage (Point to local MinIO or remote R2/S3)
+S3_ENDPOINT=http://127.0.0.1:9000
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+S3_BUCKET=nexushr
+S3_REGION=us-east-1
+
+# AI Integration (Get a free key from aistudio.google.com)
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Create an `.env.local` in `nexushr-frontend`:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+```
+
+### 3. Running the Application
+
+Run the backend and frontend in separate terminals.
+
+**Backend Server:**
+```bash
 cd nexushr-backend
 npm install
-cp .env.example .env        # fill in your keys
-npm run seed                 # seed demo data
-npm run dev                  # starts on port 5000
+npm run dev
+# Server runs at http://localhost:5000
+# Verify Health: curl http://localhost:5000/api/v1/health
+```
 
-# 4. Frontend setup (new terminal)
-cd ../nexushr-frontend
+**Frontend Application:**
+```bash
+cd nexushr-frontend
 npm install
-cp .env.example .env.local
-npm run dev                  # starts on port 3000
+npm run dev
+# App runs at http://localhost:3000
 ```
 
-API docs at `http://localhost:5000/api-docs` (Swagger UI via swagger-jsdoc)
+*Note: There is currently no database seeder. You must create your first Company and User via API calls before attempting to log in.*
 
 ---
 
-## 🔑 Demo Credentials
+## 🧠 Background Jobs & AI Screening
 
-| Role | Email | Password |
-|------|-------|----------|
-| Super Admin | `superadmin@fwc.com` | `Demo@1234` |
-| HR Manager | `hrmanager@fwc.com` | `Demo@1234` |
-| Recruiter | `recruiter@fwc.com` | `Demo@1234` |
-| Senior Manager | `manager@fwc.com` | `Demo@1234` |
-| Employee | `employee@fwc.com` | `Demo@1234` |
+NexusHR heavily utilizes **BullMQ** for complex, long-running tasks. The workers run in-process on the Express backend via a dedicated Redis connection.
 
----
-
-## 🧱 MERN Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | Next.js 14, TypeScript, Tailwind CSS, shadcn/ui |
-| **Backend** | Node.js 20 + Express.js 4 |
-| **Database** | MongoDB 7 (with Mongoose ODM) |
-| **Cache / Queue** | Redis 7 + BullMQ |
-| **AI** | Google Gemini (`gemini-2.0-flash`) |
-| **Storage** | Cloudflare R2 (S3-compatible via AWS SDK v3) |
-| **Auth** | JWT (`jsonwebtoken`) + bcryptjs |
-| **Deployment** | Vercel (FE) + Railway (BE) + MongoDB Atlas (DB) |
+1. **Automated Payroll (`payrollWorker`):** 
+   When triggered by an HR Admin, this worker calculates prorated salaries, processes standard tax/PF deductions, generates personalized PDF payslips using `pdfkit`, and securely uploads them to S3/R2.
+2. **AI Resume Screening (`aiScreeningWorker`):** 
+   When a candidate applies with a resume, the worker downloads the PDF/DOCX from S3, extracts the raw text (`pdf-parse`/`mammoth`), and streams the data to Google Gemini. Gemini evaluates the candidate against the specific Job Posting requirements and returns a structured JSON evaluation (Skill Match, Culture Fit, Red Flags) saving HR countless hours of manual review. 
+   *(Fallback: If the Gemini API key is missing or fails, a deterministic keyword-matching fallback scorer is used automatically).*
 
 ---
 
-## 🤖 AI Features
+## 🔒 Security & Business Rules
 
-- **Resume Screening** — Gemini extracts, scores candidates 0–100 vs JD
-- **HR Chat Assistant** — RAG-powered policy Q&A with real employee data context
-- **Voice Interface** — STT (OpenAI Whisper) + TTS (ElevenLabs) for interviews
-- **Attrition Prediction** — Nightly BullMQ batch analysis of employee signals
-- **Hiring Forecast** — Predictive department headcount recommendations
-- **Document Intelligence** — Gemini embeddings (`text-embedding-004`) for semantic search
-
----
-
-## 📋 Project Structure
-
-```
-nexushr/
-├── nexushr-backend/              # Node.js + Express API
-│   ├── src/
-│   │   ├── app.js               # Express app setup
-│   │   ├── server.js            # HTTP server entry point
-│   │   ├── config/              # env, db, redis, multer, s3
-│   │   ├── middleware/          # auth, rbac, rateLimit, audit, error
-│   │   ├── modules/             # auth, employees, attendance, leaves,
-│   │   │                        # payroll, recruitment, ai, analytics
-│   │   ├── models/              # Mongoose models (all collections)
-│   │   ├── queues/              # BullMQ workers (AI screening, payroll)
-│   │   └── utils/               # email, pdf, s3, validators
-│   ├── seed.js
-│   ├── .env.example
-│   └── package.json
-│
-├── nexushr-frontend/             # Next.js 14 App Router
-│   └── src/
-│       ├── app/                 # (auth) + (dashboard) route groups
-│       ├── components/          # ui, layout, dashboards, ai, analytics
-│       └── lib/                 # api client, zustand stores, hooks
-│
-└── docs/                        # All markdown documentation
-```
+NexusHR is built with enterprise security patterns in mind:
+- **AES-256-GCM Encryption:** Employee PII (Aadhaar, PAN, Bank Details) is encrypted at rest in MongoDB.
+- **Multi-Tenant Isolation:** Every single database query is strictly scoped by `companyId`.
+- **Strict Validation Rules:**
+  - **BR-001:** Employees cannot review or approve their own leave requests.
+  - **BR-002:** The system enforces exactly one payroll run per company per distinct calendar period.
+  - **BR-004:** AI Screening is strictly advisory. Human HR gatekeepers are the only ones allowed to transition candidates to interview or offer stages. 
 
 ---
 
-## 📊 Key Metrics Targets
-
-| Metric | Target |
-|--------|--------|
-| Page Load (P95) | < 2 seconds |
-| API Response | < 200ms |
-| AI Resume Screen | < 5 seconds |
-| System Uptime | 99.9% |
-| Payroll Error Rate | < 0.1% |
-| Self-Service Adoption | > 80% |
-
----
-
-## 📄 License
-
-Internal & Proprietary — FWC IT Services Pvt. Ltd. — Revision A2 (MERN), June 2025
+*Documentation updated as of Phase 5 Completion.*
