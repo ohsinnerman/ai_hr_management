@@ -1,0 +1,52 @@
+import 'dotenv/config';
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+
+import { connectDB } from './config/db.js';
+import { connectRedis } from './config/redis.js';
+import './models/index.js'; // register all Mongoose schemas (so populate/ref works)
+import authRouter from './modules/auth/auth.routes.js';
+import { errorHandler } from './middleware/errorHandler.js';
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ── Security & parsing middleware ──────────────────────────
+app.use(helmet());
+app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000', credentials: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(morgan('dev'));
+
+// ── Health check (no auth) ─────────────────────────────────
+app.get('/api/v1/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date(), version: '1.0.0' });
+});
+
+// ── Routes ─────────────────────────────────────────────────
+app.use('/api/v1/auth', authRouter);
+
+// ── Error handler (must be last) ───────────────────────────
+app.use(errorHandler);
+
+// ── Startup ────────────────────────────────────────────────
+const start = async () => {
+  try {
+    await connectDB();
+    await connectRedis();
+    app.listen(PORT, () => {
+      console.log(`[Server] Running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('[Server] Failed to start:', err.message);
+    process.exit(1);
+  }
+};
+
+start();
+
+export default app;
