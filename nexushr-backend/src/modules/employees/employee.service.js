@@ -2,7 +2,9 @@ import crypto from 'crypto';
 import bcryptjs from 'bcryptjs';
 import Employee from '../../models/Employee.model.js';
 import User from '../../models/User.model.js';
+import Payslip from '../../models/Payslip.model.js';
 import { encrypt, decrypt, maskSensitive } from '../../utils/crypto.js';
+import { getSignedDownloadUrl, keyFromUrl } from '../../utils/s3Upload.js';
 
 const httpError = (status, code, message) => {
   const err = new Error(message || code);
@@ -238,4 +240,67 @@ export const softDelete = async (companyId, id) => {
     await User.updateOne({ _id: employee.userId }, { isActive: false }).catch(() => {});
   }
   return employee;
+};
+
+// ── Self-service (Phase 6) ─────────────────────────────────
+
+// Fully decrypt PII for the employee viewing their OWN record (no masking).
+const decryptFull = (empDoc) => {
+  const obj = empDoc?.toObject ? empDoc.toObject() : empDoc;
+  if (!obj) return obj;
+  if (obj.panNumber) obj.panNumber = decrypt(obj.panNumber);
+  if (obj.aadhaarNumber) obj.aadhaarNumber = decrypt(obj.aadhaarNumber);
+  if (obj.bankDetails) {
+    const plain = decrypt(obj.bankDetails);
+    try {
+      obj.bankDetails = JSON.parse(plain);
+    } catch {
+      obj.bankDetails = plain;
+    }
+  }
+  return obj;
+};
+
+// Resolve the Employee linked to a user, or 404.
+const requireOwnEmployee = async (userId) => {
+  const employee = await Employee.findOne({ userId, deletedAt: null });
+  if (!employee) throw httpError(404, 'EMPLOYEE_NOT_FOUND', 'No employee record is linked to this user');
+  return employee;
+};
+
+/**
+ * The caller's own profile with PII fully decrypted (PAN/Aadhaar plaintext,
+ * bankDetails parsed back to JSON). Only ever used for the `me` endpoint.
+ */
+export const getSelfProfile = async (userId) => {
+  const employee = await Employee.findOne({ userId, deletedAt: null }).populate(
+    'departmentId designationId managerId'
+  );
+  if (!employee) throw httpError(404, 'EMPLOYEE_NOT_FOUND', 'No employee record is linked to this user');
+  return decryptFull(employee);
+};
+
+/**
+ * The caller's own PUBLISHED payslips, newest first, with the run period populated.
+ */
+export const getSelfPayslips = async (userId) => {
+  const employee = await requireOwnEmployee(userId);
+  return Payslip.find({ employeeId: employee._id, isPublished: true })
+    .populate('payrollRunId', 'periodStart periodEnd status runDate')
+    .sort({ createdAt: -1 })
+    .lean();
+};
+
+/**
+ * A time-limited signed URL to download one of the caller's own published payslips.
+ */
+export const getSelfPayslipDownloadUrl = async (userId, payslipId) => {
+  const employee = await requireOwnEmployee(userId);
+  const payslip = await Payslip.findOne({ _id: payslipId, employeeId: employee._id, isPublished: true });
+  if (!payslip) throw httpError(404, 'NOT_FOUND', 'Payslip not found');
+  if (!payslip.pdfUrl) throw httpError(404, 'PDF_UNAVAILABLE', 'No PDF is available for this payslip');
+
+  const key = keyFromUrl(payslip.pdfUrl);
+  const url = await getSignedDownloadUrl(key, 3600);
+  return { url, expiresIn: 3600 };
 };

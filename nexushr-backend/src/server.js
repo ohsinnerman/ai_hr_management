@@ -16,6 +16,8 @@ import attendanceRouter from './modules/attendance/attendance.routes.js';
 import leaveRouter from './modules/leaves/leave.routes.js';
 import payrollRouter from './modules/payroll/payroll.routes.js';
 import recruitmentRouter from './modules/recruitment/recruitment.routes.js';
+import aiRouter from './modules/ai/ai.routes.js';
+import analyticsRouter from './modules/analytics/analytics.routes.js';
 import { createPayrollWorker } from './workers/payrollWorker.js';
 import { createAiScreeningWorker } from './workers/aiScreeningWorker.js';
 import { authenticate } from './middleware/authenticate.js';
@@ -50,6 +52,9 @@ app.use('/api/v1/leaves', authenticate, leaveRouter);
 app.use('/api/v1/payroll', authenticate, payrollRouter);
 // Phase 5 — Recruitment & AI screening
 app.use('/api/v1/recruitment', authenticate, recruitmentRouter);
+// Phase 7 — AI Chat (RAG), Document upload, Analytics
+app.use('/api/v1/ai', authenticate, aiRouter);
+app.use('/api/v1/analytics', authenticate, analyticsRouter);
 
 // ── Error handler (must be last) ───────────────────────────
 app.use(errorHandler);

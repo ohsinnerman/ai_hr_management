@@ -19,3 +19,21 @@ export const resumeUpload = multer({
     cb(err);
   },
 });
+
+// Knowledge-base documents also accept plain text in addition to PDF/DOC/DOCX.
+const DOC_MIME = new Set([...ALLOWED_MIME, 'text/plain']);
+
+export const documentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (DOC_MIME.has(file.mimetype)) return cb(null, true);
+    const err = new Error('Only PDF, DOC, DOCX, or TXT files are allowed');
+    err.status = 400;
+    err.code = 'INVALID_FILE_TYPE';
+    cb(err);
+  },
+});
+
+// Alias used by the AI document-upload route.
+export const upload = documentUpload;

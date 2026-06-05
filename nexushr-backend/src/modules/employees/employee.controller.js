@@ -16,6 +16,24 @@ export const listEmployees = asyncHandler(async (req, res) => {
   success(res, employees, 200, meta);
 });
 
+// GET /api/v1/employees/me  (self profile, PII decrypted)
+export const getMe = asyncHandler(async (req, res) => {
+  const employee = await employeeService.getSelfProfile(req.user.userId);
+  success(res, employee);
+});
+
+// GET /api/v1/employees/me/payslips  (own published payslips)
+export const getMyPayslips = asyncHandler(async (req, res) => {
+  const payslips = await employeeService.getSelfPayslips(req.user.userId);
+  success(res, payslips);
+});
+
+// GET /api/v1/employees/me/payslips/:payslipId/download  (signed URL)
+export const downloadMyPayslip = asyncHandler(async (req, res) => {
+  const data = await employeeService.getSelfPayslipDownloadUrl(req.user.userId, req.params.payslipId);
+  success(res, data);
+});
+
 // GET /api/v1/employees/:id
 export const getEmployee = asyncHandler(async (req, res) => {
   const employee = await employeeService.getById(req.user.companyId, req.params.id);

@@ -6,6 +6,9 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
+  getMe,
+  getMyPayslips,
+  downloadMyPayslip,
 } from './employee.controller.js';
 import { createEmployeeRules, updateEmployeeRules } from './employee.validator.js';
 import { validate } from '../../middleware/validate.js';
@@ -15,6 +18,11 @@ import { requireRole } from '../../middleware/requireRole.js';
 const router = Router();
 
 const writeRoles = requireRole('hr_manager', 'super_admin');
+
+// Self-service (any authenticated user) — MUST be before '/:id' so "me" isn't read as an id.
+router.get('/me', getMe);
+router.get('/me/payslips', getMyPayslips);
+router.get('/me/payslips/:payslipId/download', downloadMyPayslip);
 
 // Reads (any authenticated user)
 router.get('/', listEmployees);

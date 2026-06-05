@@ -15,6 +15,10 @@ import Payslip from './Payslip.model.js';
 import JobPosting from './JobPosting.model.js';
 import Candidate from './Candidate.model.js';
 import Interview from './Interview.model.js';
+import Document from './Document.model.js';
+import AiInteraction from './AiInteraction.model.js';
+import AuditLog from './AuditLog.model.js';
+import PerformanceReview from './PerformanceReview.model.js';
 
 export {
   Company,
@@ -32,4 +36,8 @@ export {
   JobPosting,
   Candidate,
   Interview,
+  Document,
+  AiInteraction,
+  AuditLog,
+  PerformanceReview,
 };

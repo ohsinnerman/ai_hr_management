@@ -23,5 +23,21 @@ export async function complete({ system, user, model = 'gemini-2.0-flash', maxTo
   return result.response.text();
 }
 
+// Streaming generator — yields text tokens for SSE (chat assistant).
+// Pass `system` as the model's systemInstruction; `history` in Gemini format
+// ([{ role: 'user'|'model', parts: [{ text }] }]).
+export async function* stream({ system, history = [], message, model = 'gemini-2.0-flash' }) {
+  const geminiModel = getModel(model, system);
+  const chat = geminiModel.startChat({
+    history,
+    generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+  });
+  const result = await chat.sendMessageStream(message);
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
+    if (text) yield text;
+  }
+}
+
 // True only when an API key is configured (lets callers fall back gracefully).
 export const isGeminiConfigured = () => Boolean(process.env.GEMINI_API_KEY);

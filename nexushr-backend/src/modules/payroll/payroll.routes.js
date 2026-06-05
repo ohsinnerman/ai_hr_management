@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { runPayroll, listRuns, getRunPayslips } from './payroll.controller.js';
+import { runPayroll, listRuns, getRunPayslips, approvePayroll } from './payroll.controller.js';
 import { validate } from '../../middleware/validate.js';
 import { requireRole } from '../../middleware/requireRole.js';
 
@@ -22,5 +22,6 @@ router.post(
 
 router.get('/', listRuns);
 router.get('/:id/payslips', getRunPayslips);
+router.patch('/:id/approve', approvePayroll);
 
 export default router;

@@ -40,3 +40,19 @@ export const getRunPayslips = asyncHandler(async (req, res) => {
   const { run, payslips } = await payrollService.getPayslipsForRun(req.user.companyId, req.params.id);
   success(res, { run, payslips });
 });
+
+// PATCH /api/v1/payroll/:id/approve
+export const approvePayroll = asyncHandler(async (req, res) => {
+  const { run, publishedCount } = await payrollService.approvePayrollRun({
+    companyId: req.user.companyId,
+    userId: req.user.userId,
+    runId: req.params.id,
+  });
+  success(res, {
+    id: run._id,
+    status: run.status,
+    approvedAt: run.approvedAt,
+    publishedPayslips: publishedCount,
+    message: 'Payroll run approved and payslips published.',
+  });
+});

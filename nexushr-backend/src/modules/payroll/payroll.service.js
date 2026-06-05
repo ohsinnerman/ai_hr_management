@@ -70,3 +70,24 @@ export const getPayslipsForRun = async (companyId, runId) => {
 
   return { run, payslips };
 };
+
+/**
+ * Approve a processed payroll run and publish its payslips to employees.
+ * Only a run in 'processed' state can be approved.
+ */
+export const approvePayrollRun = async ({ companyId, userId, runId }) => {
+  const run = await PayrollRun.findOne({ _id: runId, companyId });
+  if (!run) throw httpError(404, 'NOT_FOUND', 'Payroll run not found');
+  if (run.status !== 'processed') {
+    throw httpError(400, 'INVALID_STATUS', `Only a 'processed' run can be approved (current: ${run.status})`);
+  }
+
+  run.status = 'approved';
+  run.approvedBy = userId;
+  run.approvedAt = new Date();
+  await run.save();
+
+  const result = await Payslip.updateMany({ payrollRunId: runId }, { isPublished: true });
+
+  return { run, publishedCount: result.modifiedCount ?? result.nModified ?? 0 };
+};
