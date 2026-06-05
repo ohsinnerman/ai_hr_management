@@ -15,7 +15,9 @@ import employeeRouter from './modules/employees/employee.routes.js';
 import attendanceRouter from './modules/attendance/attendance.routes.js';
 import leaveRouter from './modules/leaves/leave.routes.js';
 import payrollRouter from './modules/payroll/payroll.routes.js';
+import recruitmentRouter from './modules/recruitment/recruitment.routes.js';
 import { createPayrollWorker } from './workers/payrollWorker.js';
+import { createAiScreeningWorker } from './workers/aiScreeningWorker.js';
 import { authenticate } from './middleware/authenticate.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -46,6 +48,8 @@ app.use('/api/v1/attendance', authenticate, attendanceRouter);
 app.use('/api/v1/leaves', authenticate, leaveRouter);
 // Phase 4 — Payroll
 app.use('/api/v1/payroll', authenticate, payrollRouter);
+// Phase 5 — Recruitment & AI screening
+app.use('/api/v1/recruitment', authenticate, recruitmentRouter);
 
 // ── Error handler (must be last) ───────────────────────────
 app.use(errorHandler);
@@ -56,6 +60,7 @@ const start = async () => {
     await connectDB();
     await connectRedis();
     createPayrollWorker(); // start BullMQ payroll worker
+    createAiScreeningWorker(); // start BullMQ AI screening worker
     app.listen(PORT, () => {
       console.log(`[Server] Running on http://localhost:${PORT}`);
     });

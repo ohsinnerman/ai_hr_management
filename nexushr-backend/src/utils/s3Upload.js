@@ -21,3 +21,22 @@ export const uploadToS3 = async (key, buffer, contentType = 'application/octet-s
  */
 export const getSignedDownloadUrl = async (key, expiresIn = 3600) =>
   getSignedUrl(s3, new GetObjectCommand({ Bucket: BUCKET, Key: key }), { expiresIn });
+
+/**
+ * Given a stored value (full object URL or raw key), return just the S3 key.
+ */
+export const keyFromUrl = (value = '') => {
+  const marker = `/${BUCKET}/`;
+  if (value.includes(marker)) return value.slice(value.indexOf(marker) + marker.length);
+  if (value.startsWith(`s3://${BUCKET}/`)) return value.slice(`s3://${BUCKET}/`.length);
+  return value; // already a key
+};
+
+/**
+ * Download an object from R2/S3 and return its Buffer.
+ */
+export const downloadFromS3 = async (keyOrUrl) => {
+  const key = keyFromUrl(keyOrUrl);
+  const res = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
+  return Buffer.from(await res.Body.transformToByteArray());
+};

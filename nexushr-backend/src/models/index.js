@@ -12,6 +12,9 @@ import LeaveBalance from './LeaveBalance.model.js';
 import SalaryStructure from './SalaryStructure.model.js';
 import PayrollRun from './PayrollRun.model.js';
 import Payslip from './Payslip.model.js';
+import JobPosting from './JobPosting.model.js';
+import Candidate from './Candidate.model.js';
+import Interview from './Interview.model.js';
 
 export {
   Company,
@@ -26,4 +29,7 @@ export {
   SalaryStructure,
   PayrollRun,
   Payslip,
+  JobPosting,
+  Candidate,
+  Interview,
 };
