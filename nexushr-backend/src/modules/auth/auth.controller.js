@@ -1,5 +1,6 @@
 import * as authService from './auth.service.js';
 import User from '../../models/User.model.js';
+import Employee from '../../models/Employee.model.js';
 import { success } from '../../utils/apiResponse.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
@@ -47,9 +48,15 @@ export const logoutHandler = asyncHandler(async (req, res) => {
 
 // GET /api/v1/auth/me
 export const meHandler = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.userId).populate('companyId').lean();
+  const [user, employee] = await Promise.all([
+    User.findById(req.user.userId).populate('companyId').lean(),
+    Employee.findOne({ userId: req.user.userId, deletedAt: null })
+      .select('-bankDetails -panNumber -aadhaarNumber')
+      .populate('departmentId designationId managerId')
+      .lean(),
+  ]);
   if (!user) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND' } });
   delete user.passwordHash;
   delete user.refreshTokenHash;
-  success(res, user);
+  success(res, { ...user, employee: employee || null });
 });

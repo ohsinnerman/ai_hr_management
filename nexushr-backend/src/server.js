@@ -9,6 +9,10 @@ import { connectDB } from './config/db.js';
 import { connectRedis } from './config/redis.js';
 import './models/index.js'; // register all Mongoose schemas (so populate/ref works)
 import authRouter from './modules/auth/auth.routes.js';
+import departmentRouter from './modules/departments/department.routes.js';
+import designationRouter from './modules/designations/designation.routes.js';
+import employeeRouter from './modules/employees/employee.routes.js';
+import { authenticate } from './middleware/authenticate.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -29,6 +33,10 @@ app.get('/api/v1/health', (req, res) => {
 
 // ── Routes ─────────────────────────────────────────────────
 app.use('/api/v1/auth', authRouter);
+// Phase 2 — Core HR (all protected by authenticate at mount; RBAC on mutations within routers)
+app.use('/api/v1/departments', authenticate, departmentRouter);
+app.use('/api/v1/designations', authenticate, designationRouter);
+app.use('/api/v1/employees', authenticate, employeeRouter);
 
 // ── Error handler (must be last) ───────────────────────────
 app.use(errorHandler);
