@@ -12,6 +12,10 @@ import authRouter from './modules/auth/auth.routes.js';
 import departmentRouter from './modules/departments/department.routes.js';
 import designationRouter from './modules/designations/designation.routes.js';
 import employeeRouter from './modules/employees/employee.routes.js';
+import attendanceRouter from './modules/attendance/attendance.routes.js';
+import leaveRouter from './modules/leaves/leave.routes.js';
+import payrollRouter from './modules/payroll/payroll.routes.js';
+import { createPayrollWorker } from './workers/payrollWorker.js';
 import { authenticate } from './middleware/authenticate.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
@@ -37,6 +41,11 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/departments', authenticate, departmentRouter);
 app.use('/api/v1/designations', authenticate, designationRouter);
 app.use('/api/v1/employees', authenticate, employeeRouter);
+// Phase 3 — Attendance & Leave
+app.use('/api/v1/attendance', authenticate, attendanceRouter);
+app.use('/api/v1/leaves', authenticate, leaveRouter);
+// Phase 4 — Payroll
+app.use('/api/v1/payroll', authenticate, payrollRouter);
 
 // ── Error handler (must be last) ───────────────────────────
 app.use(errorHandler);
@@ -46,6 +55,7 @@ const start = async () => {
   try {
     await connectDB();
     await connectRedis();
+    createPayrollWorker(); // start BullMQ payroll worker
     app.listen(PORT, () => {
       console.log(`[Server] Running on http://localhost:${PORT}`);
     });

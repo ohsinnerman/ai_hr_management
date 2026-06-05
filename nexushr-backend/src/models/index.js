@@ -5,5 +5,25 @@ import User from './User.model.js';
 import Department from './Department.model.js';
 import Designation from './Designation.model.js';
 import Employee from './Employee.model.js';
+import AttendanceRecord from './AttendanceRecord.model.js';
+import LeaveType from './LeaveType.model.js';
+import LeaveRequest from './LeaveRequest.model.js';
+import LeaveBalance from './LeaveBalance.model.js';
+import SalaryStructure from './SalaryStructure.model.js';
+import PayrollRun from './PayrollRun.model.js';
+import Payslip from './Payslip.model.js';
 
-export { Company, User, Department, Designation, Employee };
+export {
+  Company,
+  User,
+  Department,
+  Designation,
+  Employee,
+  AttendanceRecord,
+  LeaveType,
+  LeaveRequest,
+  LeaveBalance,
+  SalaryStructure,
+  PayrollRun,
+  Payslip,
+};
