@@ -19,6 +19,34 @@ const router = Router();
 
 const writeRoles = requireRole('hr_manager', 'super_admin');
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Employees
+ *     description: Employee records & self-service
+ * /employees:
+ *   get:
+ *     tags: [Employees]
+ *     summary: List employees (paginated, searchable)
+ *     security: [{ BearerAuth: [] }]
+ *     parameters:
+ *       - { in: query, name: page, schema: { type: integer, default: 1 } }
+ *       - { in: query, name: perPage, schema: { type: integer, default: 25 } }
+ *       - { in: query, name: search, schema: { type: string } }
+ *       - { in: query, name: department, schema: { type: string } }
+ *       - { in: query, name: status, schema: { type: string } }
+ *     responses:
+ *       200: { description: Paginated list of employees }
+ *       401: { description: Unauthorized }
+ *   post:
+ *     tags: [Employees]
+ *     summary: Create an employee (auto-provisions a User, encrypts PII)
+ *     security: [{ BearerAuth: [] }]
+ *     responses:
+ *       201: { description: Employee created }
+ *       403: { description: Requires hr_manager/super_admin }
+ */
+
 // Self-service (any authenticated user) — MUST be before '/:id' so "me" isn't read as an id.
 router.get('/me', getMe);
 router.get('/me/payslips', getMyPayslips);

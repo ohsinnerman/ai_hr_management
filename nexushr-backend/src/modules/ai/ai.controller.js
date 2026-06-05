@@ -218,7 +218,8 @@ Return ONLY a valid JSON object:
       const raw = await complete({
         system: 'You are an expert HR analytics AI.',
         user: prompt,
-        model: 'gemini-1.5-pro',
+        // gemini-1.5-pro is retired on the current API (404); gemini-2.0-flash is the supported model.
+        model: 'gemini-2.0-flash',
         maxTokens: 1024,
       });
       const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
