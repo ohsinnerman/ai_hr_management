@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, Sparkles, ChevronDown } from 'lucide-react';
+import { Search, Bell, Sparkles, ChevronDown, Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useChatBotStore } from '@/lib/store/chatBotStore';
@@ -16,6 +16,8 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sidebar } from '@/components/layout/Sidebar';
 
 export function Header() {
   const { user, logout } = useAuthStore();
@@ -33,6 +35,16 @@ export function Header() {
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 shadow-sm">
+      {/* Mobile sidebar (hamburger → Sheet) */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden w-9 h-9 p-0 mr-2"><Menu className="w-5 h-5" /></Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-64 border-0">
+          <Sidebar />
+        </SheetContent>
+      </Sheet>
+
       {/* Search */}
       <div className="relative w-72 hidden md:block">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
