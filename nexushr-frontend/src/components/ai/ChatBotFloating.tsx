@@ -108,8 +108,8 @@ export function ChatBotFloating() {
       <button
         onClick={toggle}
         className={cn(
-          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-xl gradient-primary flex items-center justify-center',
-          'transition-all duration-300 hover:scale-110 hover:shadow-2xl',
+          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg shadow-accent/30 bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center',
+          'transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-accent/40',
           isOpen && 'scale-90 opacity-80'
         )}
         aria-label="Toggle AI Assistant"

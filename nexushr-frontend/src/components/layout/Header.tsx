@@ -34,7 +34,7 @@ export function Header() {
   const fullName = user?.employee ? `${user.employee.firstName} ${user.employee.lastName}` : user?.email?.split('@')[0];
 
   return (
-    <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 shadow-sm">
+    <header className="h-16 bg-surface/80 backdrop-blur-xl border-b border-border/50 flex items-center justify-between px-6 shrink-0">
       {/* Mobile sidebar (hamburger → Sheet) */}
       <Sheet>
         <SheetTrigger asChild>
@@ -52,33 +52,33 @@ export function Header() {
           placeholder="Search employees, documents..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 bg-surface-2 border-transparent focus:border-primary/30 focus:bg-white h-9 text-sm"
+          className="pl-9 bg-surface-2/60 border-transparent focus:border-accent/30 focus:bg-white h-9 text-sm rounded-xl"
         />
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center gap-3 ml-auto">
+      <div className="flex items-center gap-2.5 ml-auto">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={toggle}
-          className="hidden sm:flex items-center gap-2 border-primary/20 text-primary hover:bg-primary/5"
+          className="hidden sm:flex items-center gap-2 bg-accent/10 text-accent-dark hover:bg-accent/20 rounded-xl h-9 px-3"
         >
           <Sparkles className="w-4 h-4" />
-          <span className="text-xs font-medium">AI Assistant</span>
+          <span className="text-xs font-semibold">AI Assistant</span>
         </Button>
 
-        <Button variant="ghost" size="icon" className="relative w-9 h-9 p-0">
-          <Bell className="w-5 h-5 text-muted" />
-          <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-[10px] bg-danger">
+        <Button variant="ghost" size="icon" className="relative w-9 h-9 p-0 rounded-xl hover:bg-surface-2">
+          <Bell className="w-[18px] h-[18px] text-muted" />
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-danger text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
             3
-          </Badge>
+          </span>
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 hover:bg-surface-2 rounded-lg px-2 py-1.5 transition-colors">
-              <Avatar className="w-8 h-8">
+            <button className="flex items-center gap-2.5 hover:bg-surface-2 rounded-xl px-2.5 py-1.5 transition-colors">
+              <Avatar className="w-8 h-8 ring-2 ring-accent/20">
                 <AvatarImage src={user?.employee?.profilePhotoUrl} />
                 <AvatarFallback className="bg-primary text-white text-xs font-bold">
                   {getInitials(user?.employee?.firstName ?? user?.email?.split('@')[0] ?? 'U', user?.employee?.lastName)}
@@ -86,12 +86,12 @@ export function Header() {
               </Avatar>
               <div className="hidden md:block text-left">
                 <p className="text-xs font-semibold text-primary-dark leading-none">{fullName}</p>
-                <p className="text-xs text-muted capitalize leading-none mt-0.5">{user?.role?.replace('_', ' ')}</p>
+                <p className="text-[10px] text-muted capitalize leading-none mt-0.5">{user?.role?.replace('_', ' ')}</p>
               </div>
               <ChevronDown className="w-3 h-3 text-muted hidden md:block" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 rounded-xl">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-0.5">
                 <p className="text-sm font-medium">{fullName}</p>

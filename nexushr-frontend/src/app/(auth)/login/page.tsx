@@ -80,25 +80,25 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-dark via-primary to-primary-light flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[hsl(40,20%,97%)] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-accent/10 blur-3xl" />
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] rounded-full bg-accent/5 blur-[120px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[100px] translate-y-1/3 -translate-x-1/4" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white shadow-xl mb-4">
-            <Sparkles className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-accent-dark shadow-lg shadow-accent/20 mb-4">
+            <Sparkles className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">NexusHR</h1>
-          <p className="text-white/70 text-sm mt-1">AI-Powered HR Management</p>
+          <h1 className="text-3xl font-bold text-primary-dark">NexusHR</h1>
+          <p className="text-muted text-sm mt-1">AI-Powered HR Management</p>
         </div>
 
         {/* Login Card */}
-        <Card className="border-white/10 bg-white/95 backdrop-blur-md shadow-2xl">
+        <Card className="border-border/40 bg-surface shadow-card-xl">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl text-primary-dark">Sign In</CardTitle>
             <CardDescription>Enter your credentials to access your workspace</CardDescription>
@@ -185,7 +185,7 @@ function LoginForm() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-white/50 text-xs mt-6">
+        <p className="text-center text-muted text-xs mt-6">
           &copy; 2025 FWC IT Services Pvt. Ltd. All rights reserved.
         </p>
       </div>

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, Clock, Calendar, DollarSign,
-  Briefcase, BarChart3, Settings, User, Star, FileText,
+  Briefcase, BarChart3, User, Star, FileText,
   Building2, Award,
 } from 'lucide-react';
 import type { UserRole } from '@/types';
@@ -24,7 +24,6 @@ const NAV_CONFIG: Record<UserRole, NavItem[]> = {
     { label: 'Recruitment', href: '/recruiter/jobs', icon: Briefcase },
     { label: 'Performance', href: '/hr/performance', icon: Star },
     { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-    { label: 'Settings', href: '/admin/settings', icon: Settings },
   ],
   hr_manager: [
     { label: 'Dashboard', href: '/hr', icon: LayoutDashboard },
@@ -39,8 +38,6 @@ const NAV_CONFIG: Record<UserRole, NavItem[]> = {
   recruiter: [
     { label: 'Dashboard', href: '/recruiter', icon: LayoutDashboard },
     { label: 'Jobs', href: '/recruiter/jobs', icon: Briefcase },
-    { label: 'Candidates', href: '/recruiter/candidates', icon: Users },
-    { label: 'Interviews', href: '/recruiter/interviews', icon: Calendar },
   ],
   senior_manager: [
     { label: 'Dashboard', href: '/manager', icon: LayoutDashboard },
