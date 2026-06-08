@@ -8,6 +8,40 @@ import { extractResumeText } from '../../utils/resumeParser.js';
 import { success } from '../../utils/apiResponse.js';
 import { asyncHandler } from '../../utils/asyncHandler.js';
 
+// Stream a plain string to the client word-by-word so the fallback "types" like the model.
+async function streamText(res, text) {
+  const words = text.split(' ');
+  for (let i = 0; i < words.length; i += 1) {
+    res.write(`data: ${JSON.stringify({ text: words[i] + (i < words.length - 1 ? ' ' : '') })}\n\n`);
+    // tiny delay for a natural typing feel without slowing things noticeably
+    await new Promise((r) => setTimeout(r, 12));
+  }
+}
+
+// Deterministic, data-grounded reply used when no live Gemini key is configured.
+// Answers leave-balance questions from real data; otherwise gives a helpful pointer.
+function buildFallbackReply(message, employee, leaveBalances) {
+  const q = (message || '').toLowerCase();
+  const name = employee?.firstName ? `, ${employee.firstName}` : '';
+
+  if (/(leave|balance|holiday|vacation|sick|pto|day off|days off)/.test(q) && leaveBalances?.length) {
+    const lines = leaveBalances.map((b) => {
+      const available = (b.totalAllocated ?? 0) - (b.used ?? 0) - (b.pending ?? 0) + (b.carriedForward ?? 0);
+      return `• ${b.leaveTypeId?.name ?? 'Leave'}: ${available} available (${b.used ?? 0} used, ${b.pending ?? 0} pending of ${b.totalAllocated ?? 0})`;
+    });
+    return `Here's your current leave balance${name}:\n\n${lines.join('\n')}\n\nYou can apply for leave from the Leaves page. For policy specifics, please check the company documents or contact HR.`;
+  }
+
+  if (/payslip|salary|pay|payroll/.test(q)) {
+    return `You can view and download your payslips${name} from the Payslips page once a payroll run is approved and published. Each payslip shows your gross, deductions, and net pay.`;
+  }
+  if (/attendance|check.?in|check.?out|present|absent/.test(q)) {
+    return `You can check in and out from the Attendance page${name}, and view your monthly calendar with present/absent/late days there.`;
+  }
+
+  return `I'm here to help with HR questions about leave, payroll, attendance, and company policies${name}. Try asking "What is my leave balance?" — for anything I can't answer, please reach out to your HR team.`;
+}
+
 /**
  * POST /api/v1/ai/chat — SSE streaming RAG chat.
  * Body: { message, sessionId, history: [{ role: 'user'|'assistant', content }] }
@@ -56,16 +90,23 @@ export const chatHandler = asyncHandler(async (req, res) => {
     parts: [{ text: h.content }],
   }));
 
-  // 5. Stream tokens via SSE (graceful error event if Gemini is unavailable).
+  // 5. Stream tokens via SSE. With a live Gemini key we stream the model; otherwise we
+  //    stream a deterministic, data-grounded fallback so the assistant stays useful.
   let fullText = '';
-  try {
-    if (!isGeminiConfigured()) throw new Error('GEMINI_API_KEY not configured');
-    for await (const token of stream({ system, history: geminiHistory, message })) {
-      fullText += token;
-      res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
+  if (isGeminiConfigured()) {
+    try {
+      for await (const token of stream({ system, history: geminiHistory, message })) {
+        fullText += token;
+        res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
+      }
+    } catch (streamErr) {
+      // Live key failed mid-stream — fall back rather than show a hard error.
+      fullText = buildFallbackReply(message, employee, leaveBalances);
+      await streamText(res, fullText);
     }
-  } catch (streamErr) {
-    res.write(`data: ${JSON.stringify({ error: 'AI service unavailable. Please try again.' })}\n\n`);
+  } else {
+    fullText = buildFallbackReply(message, employee, leaveBalances);
+    await streamText(res, fullText);
   }
 
   // 6. Sources + done signal.

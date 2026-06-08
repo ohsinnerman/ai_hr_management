@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Skeleton } from '@/components/ui/skeleton';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn, formatDate } from '@/lib/utils';
+import { useStaggerCards } from '@/lib/hooks/useGSAP';
 import type { JobPosting } from '@/types';
 
 const jobSchema = z.object({
@@ -54,6 +55,7 @@ export default function JobsPage() {
   const createJob = useCreateJob();
   const publishJob = usePublishJob();
   const closeJob = useCloseJob();
+  const gridRef = useStaggerCards();
 
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<JobInput>({
     resolver: zodResolver(jobSchema),
@@ -174,14 +176,14 @@ export default function JobsPage() {
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-xl" />)}
         </div>
       ) : jobs.length === 0 ? (
-        <div className="card-elevated py-16 text-center text-muted text-sm">No job postings yet. Create one to get started.</div>
+        <div className="card-bento py-16 text-center text-muted text-sm">No job postings yet. Create one to get started.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {jobs.map((job) => (
-            <Card key={job._id} className="hover:shadow-lg transition-shadow group">
+            <Card key={job._id} className="card-bento interactive-lift group !p-0 overflow-hidden" data-animate>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center shadow-sm">
                     <Briefcase className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex items-center gap-2">

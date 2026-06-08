@@ -39,5 +39,12 @@ export async function* stream({ system, history = [], message, model = 'gemini-2
   }
 }
 
-// True only when an API key is configured (lets callers fall back gracefully).
-export const isGeminiConfigured = () => Boolean(process.env.GEMINI_API_KEY);
+// True only when a USABLE AI Studio API key is configured.
+// Classic Generative Language API keys start with "AIza". Other formats (e.g. OAuth/Vertex
+// "AQ." express tokens) are NOT accepted by the @google/generative-ai SDK and would fail at
+// runtime — so we treat them as "not configured" and let callers use the graceful fallbacks
+// (rule-based résumé scoring, empty AI results) instead of throwing user-facing errors.
+export const isGeminiConfigured = () => {
+  const key = (process.env.GEMINI_API_KEY || '').trim();
+  return key.startsWith('AIza') && key.length >= 30;
+};

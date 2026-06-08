@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { useStaggerCards } from '@/lib/hooks/useGSAP';
 import type { Payslip } from '@/types';
 
 function PayslipModal({ payslip, open, onClose }: { payslip: Payslip | null; open: boolean; onClose: () => void }) {
@@ -72,6 +73,7 @@ function PayslipModal({ payslip, open, onClose }: { payslip: Payslip | null; ope
 export default function PayslipsPage() {
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
   const { data: payslips, isLoading } = useMyPayslips();
+  const gridRef = useStaggerCards();
 
   const latest = payslips?.[0];
 
@@ -83,32 +85,33 @@ export default function PayslipsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={gridRef} className="space-y-6">
       <PageHeader title="Payslips" description="Your salary and payment history" />
 
       {isLoading ? (
         <Skeleton className="h-44 w-full rounded-2xl" />
       ) : latest ? (
-        <Card className="overflow-hidden">
-          <div className="gradient-primary p-6 text-white">
-            <p className="text-white/70 text-sm">Latest Payslip</p>
-            <p className="text-4xl font-bold mt-1">{formatCurrency(latest.netSalary)}</p>
-            {latest.payrollRunId && <p className="text-white/60 text-sm mt-1">{formatDate(latest.payrollRunId.periodStart, 'MMMM yyyy')}</p>}
-            <div className="flex gap-6 mt-4 pt-4 border-t border-white/20">
-              <div><p className="text-white/60 text-xs">Gross</p><p className="text-white font-semibold">{formatCurrency(latest.grossSalary)}</p></div>
-              <div><p className="text-white/60 text-xs">Deductions</p><p className="text-white/80 font-semibold">- {formatCurrency(latest.totalDeductions)}</p></div>
-              <div><p className="text-white/60 text-xs">Paid Days</p><p className="text-white font-semibold">{latest.paidDays}/{latest.totalWorkingDays}</p></div>
+        <div className="card-dark relative overflow-hidden p-0" data-animate>
+          <div className="absolute top-0 right-0 w-72 h-72 bg-accent/15 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
+          <div className="relative p-6">
+            <p className="text-white/60 text-sm font-medium">Latest Payslip</p>
+            <p className="text-5xl font-extrabold mt-1 tracking-tight">{formatCurrency(latest.netSalary)}</p>
+            {latest.payrollRunId && <p className="text-white/50 text-sm mt-1">{formatDate(latest.payrollRunId.periodStart, 'MMMM yyyy')}</p>}
+            <div className="flex gap-8 mt-5 pt-4 border-t border-white/10">
+              <div><p className="text-white/40 text-xs">Gross</p><p className="text-white font-bold mt-0.5">{formatCurrency(latest.grossSalary)}</p></div>
+              <div><p className="text-white/40 text-xs">Deductions</p><p className="text-accent-light font-bold mt-0.5">- {formatCurrency(latest.totalDeductions)}</p></div>
+              <div><p className="text-white/40 text-xs">Paid Days</p><p className="text-white font-bold mt-0.5">{latest.paidDays}/{latest.totalWorkingDays}</p></div>
             </div>
           </div>
-          <div className="p-4 bg-white">
-            <Button variant="outline" className="w-full" onClick={handleLatestDownload}>
+          <div className="relative p-4 pt-0">
+            <Button className="w-full bg-accent text-primary-dark hover:bg-accent-light font-semibold" onClick={handleLatestDownload}>
               <Download className="w-4 h-4 mr-2" /> Download Latest Payslip
             </Button>
           </div>
-        </Card>
+        </div>
       ) : null}
 
-      <Card>
+      <Card data-animate>
         <CardHeader>
           <CardTitle className="text-base font-semibold flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Payment History</CardTitle>
         </CardHeader>

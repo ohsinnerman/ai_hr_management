@@ -1,9 +1,9 @@
 'use client';
 
-import { Users, Briefcase, TrendingDown, Clock, DollarSign, UserCheck, ArrowUpRight } from 'lucide-react';
+import { Users, Briefcase, Clock, DollarSign, UserCheck, ArrowUpRight } from 'lucide-react';
 import { format } from 'date-fns';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area,
 } from 'recharts';
 import { useAdminDashboard } from '@/lib/api/dashboard';

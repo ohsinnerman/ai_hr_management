@@ -39,7 +39,7 @@ export default function EmployeeDashboardPage() {
             <Card className="bento-md card-dark text-white border-0 bg-primary-dark" data-animate>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold text-white/80 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-accent" /> Today's Attendance
+                  <Clock className="w-4 h-4 text-accent" /> Today&apos;s Attendance
                 </CardTitle>
               </CardHeader>
               <CardContent>
